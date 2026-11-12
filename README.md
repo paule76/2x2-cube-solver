@@ -6,6 +6,7 @@ Statische Web-App, die einen 2x2-Zauberwürfel **optimal** löst (kürzestmögli
 
 1. Farbe in der Palette wählen und die Felder im aufgeklappten Netz einfärben – so, wie dein Würfel aussieht (U = oben, F = vorne, R = rechts, L = links, B = hinten, D = unten).
 2. **Lösen** drücken.
+   Zum Üben: **Zufällig mischen** erzeugt eine zufällige Mischung aus 12 Zügen und zeigt sie animiert.
 3. Mit **Weiter / Zurück** die Züge Schritt für Schritt durchgehen. Das Netz zeigt jeweils den Zwischenstand.
 
 ### 3D-Ansicht
@@ -15,6 +16,8 @@ Statische Web-App, die einen 2x2-Zauberwürfel **optimal** löst (kürzestmögli
 - **Abspielen** spielt die Lösung automatisch ab (Tempo langsam / normal / schnell).
 - Fährt man im Netz über ein Feld, leuchtet derselbe Sticker im 3D-Würfel auf; ein Klick auf einen 3D-Sticker markiert das Feld im Netz.
 - **Tastatur:** ← / → Zurück / Weiter, Pos1 / Ende, Leertaste = Abspielen / Pause.
+
+„Leeren“, „Gelöst zurücksetzen“ und „Zufällig mischen“ überschreiben die Eingabe. Dann wird der Button zuerst rot („Wirklich …?“), und erst ein zweiter Klick innerhalb von 3 Sekunden führt die Aktion aus. Ist das Netz leer oder der Würfel gelöst, entfällt die Rückfrage (außer beim Leeren).
 
 Notation: `R` = rechte Seite im Uhrzeigersinn (mit Blick auf die Seite), `R'` = gegen den Uhrzeigersinn, `R2` = halbe Drehung. Es werden nur die Seiten U, R und F gedreht – die Ecke hinten-unten-links bleibt an ihrem Platz.
 

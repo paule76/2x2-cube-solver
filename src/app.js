@@ -1,4 +1,4 @@
-import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMoves, moveToString } from './cube.js';
+import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMove, applyMoves, moveToString, isSolved } from './cube.js';
 import { createSolver } from './solver.js';
 import { createNetView } from './views/net-view.js';
 import { createCube3dView } from './views/cube3d-view.js';
@@ -6,6 +6,8 @@ import { createStepper } from './stepper.js';
 import { stepText, describeMove } from './step-text.js';
 import { createPlayer } from './player.js';
 import { keyAction } from './keys.js';
+import { randomScramble } from './scramble.js';
+import { createConfirm } from './confirm.js';
 
 const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
 
@@ -46,6 +48,8 @@ function setMessage(text, kind = '') {
 }
 
 function onCellClick(index) {
+  if (scrambling) return;
+  resetConfirms();
   if (solution) {
     // Editing during navigation: continue from what is shown, drop the stale solution.
     input = displayed();
@@ -191,27 +195,109 @@ function buildPalette() {
 }
 
 buildPalette();
-$('solve').addEventListener('click', solve);
+$('solve').addEventListener('click', () => {
+  resetConfirms();
+  solve();
+});
 $('reset-camera').addEventListener('click', () => cube3d.resetCamera());
-$('reset').addEventListener('click', () => {
+function resetToSolved() {
   input = toFacelets(SOLVED);
   clearSolution();
   setMessage('');
   render();
-});
-$('clear').addEventListener('click', () => {
+}
+
+function clearInput() {
   input = new Array(24).fill(null);
   clearSolution();
   setMessage('');
   render();
-});
+}
+
+// --- Scramble -------------------------------------------------------------
+
+let scrambling = false;
+
+function setInputButtonsDisabled(disabled) {
+  for (const id of ['scramble', 'reset', 'clear']) $(id).disabled = disabled;
+  $('solve').disabled = disabled || !solver;
+}
+
+async function scramble() {
+  const moves = randomScramble();
+  scrambling = true;
+  setInputButtonsDisabled(true);
+  try {
+    clearSolution();
+    setMessage('Mische …');
+    let state = SOLVED;
+    input = toFacelets(state);
+    render();
+    for (const m of moves) {
+      await view.showMove(m, 1);
+      state = applyMove(state, m);
+      input = toFacelets(state);
+      render();
+    }
+    setMessage(`Gemischt mit: ${moves.map(moveToString).join(' ')} – jetzt „Lösen“ drücken.`);
+  } finally {
+    scrambling = false;
+    setInputButtonsDisabled(false);
+  }
+}
+
+// --- Confirmation before overwriting the input ----------------------------
+
+const isEmpty = () => input.every((c) => !c);
+const isSolvedInput = () => {
+  const r = parseFacelets(input);
+  return r.ok && isSolved(r.state);
+};
+const NEEDS_CONFIRM = {
+  clear: () => !isEmpty(),
+  reset: () => !isEmpty() && !isSolvedInput(),
+  scramble: () => !isEmpty() && !isSolvedInput(),
+};
+const CONFIRM_LABELS = { clear: 'Wirklich leeren?', reset: 'Wirklich zurücksetzen?', scramble: 'Wirklich mischen?' };
+const ACTIONS = { clear: clearInput, reset: resetToSolved, scramble };
+const confirms = {};
+
+for (const id of Object.keys(ACTIONS)) {
+  const button = $(id);
+  const label = button.textContent;
+  confirms[id] = createConfirm({
+    setTimeout: (fn, ms) => setTimeout(fn, ms),
+    clearTimeout: (t) => clearTimeout(t),
+    onArm: () => {
+      button.textContent = CONFIRM_LABELS[id];
+      button.classList.add('danger');
+      setMessage('Zum Bestätigen noch einmal klicken.');
+    },
+    onDisarm: () => {
+      button.textContent = label;
+      button.classList.remove('danger');
+    },
+  });
+  button.addEventListener('click', () => {
+    if (scrambling) return;
+    resetConfirms(id);
+    if (NEEDS_CONFIRM[id]() && !confirms[id].press()) return;
+    confirms[id].reset();
+    ACTIONS[id]();
+  });
+}
+
+function resetConfirms(except) {
+  for (const [id, c] of Object.entries(confirms)) if (id !== except) c.reset();
+}
+
 for (const action of ['first', 'prev', 'next', 'last']) {
   $(action).addEventListener('click', () => navigate(action));
 }
 $('play').addEventListener('click', togglePlay);
 $('tempo').addEventListener('change', (e) => player.setTempo(e.target.value));
 document.addEventListener('keydown', (e) => {
-  if (!solution) return;
+  if (!solution || scrambling) return;
   const action = keyAction(e);
   if (!action) return;
   e.preventDefault();
@@ -222,6 +308,6 @@ render();
 // Let the page paint before the ~0.5 s table build.
 setTimeout(() => {
   solver = createSolver();
-  $('solve').disabled = false;
+  $('solve').disabled = scrambling;
   if ($('message').textContent === 'Initialisiere Solver…') setMessage('Bereit.');
 }, 0);

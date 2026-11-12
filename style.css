@@ -136,6 +136,7 @@ button:not(.cell):not(.swatch) {
   cursor: pointer;
 }
 button.primary:not(.cell):not(.swatch) { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.danger:not(.cell):not(.swatch) { background: #c62828; border-color: #c62828; color: #fff; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
