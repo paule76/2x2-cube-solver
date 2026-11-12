@@ -1,0 +1,62 @@
+// Net view: the cube unfolded as a cross. Implements the view interface
+// { render(facelets), showMove(move, direction) } so a 3D view can replace it later.
+
+// Face letter -> first facelet index, and grid placement (column, row) in the cross.
+const FACES = [
+  { face: 'U', start: 0, col: 2, row: 1 },
+  { face: 'L', start: 16, col: 1, row: 2 },
+  { face: 'F', start: 8, col: 2, row: 2 },
+  { face: 'R', start: 4, col: 3, row: 2 },
+  { face: 'B', start: 20, col: 4, row: 2 },
+  { face: 'D', start: 12, col: 2, row: 3 },
+];
+
+const FACE_NAMES = { U: 'Oben', L: 'Links', F: 'Vorne', R: 'Rechts', B: 'Hinten', D: 'Unten' };
+
+/**
+ * @param {HTMLElement} container
+ * @param {{ onCellClick(index: number): void, colorName?(color: string|null): string }} options
+ */
+export function createNetView(container, { onCellClick, colorName = (c) => c ?? 'leer' }) {
+  const cells = new Array(24);
+  container.classList.add('net');
+  container.replaceChildren();
+
+  for (const { face, start, col, row } of FACES) {
+    const el = document.createElement('div');
+    el.className = 'face';
+    el.style.gridColumn = String(col);
+    el.style.gridRow = String(row);
+    const label = document.createElement('span');
+    label.className = 'face-label';
+    label.textContent = face;
+    label.title = FACE_NAMES[face];
+    el.append(label);
+    for (let k = 0; k < 4; k++) {
+      const index = start + k;
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'cell';
+      cell.dataset.index = String(index);
+      cell.addEventListener('click', () => onCellClick(index));
+      cells[index] = cell;
+      el.append(cell);
+    }
+    container.append(el);
+  }
+
+  return {
+    render(facelets) {
+      facelets.forEach((color, i) => {
+        const cell = cells[i];
+        cell.dataset.color = color ?? '';
+        const face = FACES.find((f) => i >= f.start && i < f.start + 4);
+        cell.setAttribute('aria-label', `${FACE_NAMES[face.face]}, Feld ${i - face.start + 1}: ${colorName(color)}`);
+      });
+    },
+    // The flat net has no animation; a 3D view would animate here.
+    showMove() {
+      return Promise.resolve();
+    },
+  };
+}

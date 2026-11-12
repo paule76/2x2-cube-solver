@@ -1,0 +1,164 @@
+:root {
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #5f6368;
+  --border: #d9d9d4;
+  --accent: #2456d6;
+  --accent-text: #ffffff;
+  --error: #b3261e;
+  --success: #1b7a3a;
+  --cell-empty: #ececea;
+
+  --c-W: #ffffff;
+  --c-Y: #ffd500;
+  --c-G: #009b48;
+  --c-B: #0046ad;
+  --c-R: #b71234;
+  --c-O: #ff5800;
+
+  --cell: clamp(26px, 7.2vw, 44px);
+  --gap: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141416;
+    --surface: #1e1e21;
+    --text: #ececec;
+    --muted: #a0a0a6;
+    --border: #3a3a40;
+    --accent: #7aa2ff;
+    --accent-text: #0b1020;
+    --error: #ff8a80;
+    --success: #7fd69a;
+    --cell-empty: #2c2c31;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141416;
+  --surface: #1e1e21;
+  --text: #ececec;
+  --muted: #a0a0a6;
+  --border: #3a3a40;
+  --accent: #7aa2ff;
+  --accent-text: #0b1020;
+  --error: #ff8a80;
+  --success: #7fd69a;
+  --cell-empty: #2c2c31;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+h1 { font-size: 1.75rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.lead, .hint { color: var(--muted); margin: 0 0 16px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.palette { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.swatch {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+.swatch[aria-checked="true"] { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.net {
+  display: grid;
+  grid-template-columns: repeat(4, calc(var(--cell) * 2 + var(--gap)));
+  grid-template-rows: repeat(3, calc(var(--cell) * 2 + var(--gap)));
+  gap: 18px;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+.face {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, var(--cell));
+  grid-template-rows: repeat(2, var(--cell));
+  gap: var(--gap);
+}
+.face-label {
+  position: absolute;
+  top: -2px; left: -14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+}
+.cell {
+  width: var(--cell); height: var(--cell);
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  background: var(--cell-empty);
+  cursor: pointer;
+}
+.cell[data-color=""] { border-style: dashed; border-color: var(--muted); }
+[data-color="W"] { background: var(--c-W); }
+[data-color="Y"] { background: var(--c-Y); }
+[data-color="G"] { background: var(--c-G); }
+[data-color="B"] { background: var(--c-B); }
+[data-color="R"] { background: var(--c-R); }
+[data-color="O"] { background: var(--c-O); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button:not(.cell):not(.swatch) {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button.primary:not(.cell):not(.swatch) { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.message { min-height: 1.5em; margin: 12px 0 0; }
+.message.error { color: var(--error); font-weight: 600; }
+.message.success { color: var(--success); font-weight: 600; }
+
+.moves {
+  list-style: none;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0; margin: 0 0 12px;
+}
+.moves li {
+  min-width: 2.6em;
+  text-align: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+.moves li.done { color: var(--muted); }
+.moves li.current { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.step { margin: 0 0 12px; }
+
+@media (max-width: 420px) {
+  .actions button { flex: 1 1 auto; }
+}

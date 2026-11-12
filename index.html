@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2x2 Würfel-Löser</title>
+  <meta name="description" content="Gib die Farben deines 2x2-Würfels ein und erhalte die kürzeste Lösung Schritt für Schritt.">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>2x2 Würfel-Löser</h1>
+      <p class="lead">Färbe das Netz wie deinen Würfel ein und drücke „Lösen“. Du bekommst die kürzestmögliche Lösung (höchstens 11 Züge).</p>
+    </header>
+
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">Würfel eingeben</h2>
+      <div class="palette" id="palette" role="radiogroup" aria-label="Farbe wählen"></div>
+      <div class="net" id="net"></div>
+      <div class="actions">
+        <button type="button" id="solve" class="primary" disabled>Lösen</button>
+        <button type="button" id="reset">Gelöst zurücksetzen</button>
+        <button type="button" id="clear">Leeren</button>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite">Initialisiere Solver…</p>
+    </section>
+
+    <section class="panel" id="solution" aria-labelledby="solution-title" hidden>
+      <h2 id="solution-title">Lösung</h2>
+      <p class="hint">Halte den Würfel so, wie du ihn eingegeben hast: U oben, F vorne. Drehrichtung jeweils mit Blick auf die Seite.</p>
+      <ol class="moves" id="moves"></ol>
+      <p class="step" id="step-text" aria-live="polite"></p>
+      <div class="actions nav">
+        <button type="button" id="first" aria-label="Zum Anfang">⏮ Anfang</button>
+        <button type="button" id="prev">◀ Zurück</button>
+        <button type="button" id="next" class="primary">Weiter ▶</button>
+        <button type="button" id="last" aria-label="Zum Ende">Ende ⏭</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
