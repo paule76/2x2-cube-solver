@@ -48,7 +48,7 @@ python3 -m http.server 8000
 ## Tests
 
 ```bash
-npm test   # Node ≥ 20, keine Abhängigkeiten
+npm test   # Node ≥ 20 (CI: Node 24), keine Abhängigkeiten
 ```
 
 ## Veröffentlichung (GitHub Pages)
