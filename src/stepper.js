@@ -18,14 +18,15 @@ export function createStepper(view, getSolution) {
       const target = Math.max(0, Math.min(sol.moves.length, step));
       if (target === sol.step) return false;
       if (Math.abs(target - sol.step) === 1) {
-        const forward = target > sol.step;
+        const from = sol.step;
+        const forward = target > from;
         busy = true;
         try {
           await view.showMove(sol.moves[forward ? sol.step : target], forward ? 1 : -1);
         } finally {
           busy = false;
         }
-        if (getSolution() !== sol) return false; // input changed meanwhile
+        if (getSolution() !== sol || sol.step !== from) return false; // changed meanwhile
       }
       sol.step = target;
       return true;

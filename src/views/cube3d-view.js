@@ -88,11 +88,17 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
   let press = null;
   let suppressClick = false;
   container.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || e.button !== 0) return;
     press = { id: e.pointerId, x: e.clientX, y: e.clientY, cam: { ...camera }, dragging: false };
     suppressClick = false;
   });
   container.addEventListener('pointermove', (e) => {
     if (!press || e.pointerId !== press.id) return;
+    if (e.buttons === 0) {
+      // Released outside the cube before the drag started (no capture yet).
+      endPress(e);
+      return;
+    }
     const dx = e.clientX - press.x;
     const dy = e.clientY - press.y;
     if (!press.dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
@@ -107,12 +113,12 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
       applyCamera();
     }
   });
-  const endPress = (e) => {
+  function endPress(e) {
     if (press && e.pointerId === press.id) {
       press = null;
       container.classList.remove('dragging');
     }
-  };
+  }
   container.addEventListener('pointerup', endPress);
   container.addEventListener('pointercancel', endPress);
   container.addEventListener('click', (e) => {

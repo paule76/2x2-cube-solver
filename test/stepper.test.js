@@ -62,3 +62,14 @@ test('jumps clamp and skip animation', async () => {
   assert.equal(await stepper.goTo(3), false);
   assert.deepEqual(view.shown, []);
 });
+
+test('step changed elsewhere during animation is not overwritten', async () => {
+  const view = slowView();
+  const sol = { moves: ['a', 'b', 'c'], step: 3 };
+  const stepper = createStepper(view, () => sol);
+  const p = stepper.goTo(2); // animating "prev"
+  sol.step = 0; // e.g. replay restarted from the beginning
+  view.release();
+  assert.equal(await p, false);
+  assert.equal(sol.step, 0);
+});

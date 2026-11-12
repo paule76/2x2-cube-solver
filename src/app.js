@@ -88,8 +88,9 @@ function solve() {
 const stepper = createStepper(view, () => solution);
 
 async function goTo(step) {
+  // No disabling of the nav buttons here: that would drop keyboard focus during the
+  // animation. The stepper itself ignores navigation while a move is shown.
   if (stepper.busy) return;
-  setNavDisabled(true);
   await stepper.goTo(step);
   render();
 }
@@ -128,9 +129,6 @@ function navigate(action) {
   goTo(target);
 }
 
-function setNavDisabled(disabled) {
-  for (const id of ['first', 'prev', 'next', 'last']) $(id).disabled = disabled;
-}
 
 function renderSolution() {
   if (!solution) return;
