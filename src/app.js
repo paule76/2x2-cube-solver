@@ -1,6 +1,7 @@
 import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMoves, moveToString } from './cube.js';
 import { createSolver } from './solver.js';
 import { createNetView } from './views/net-view.js';
+import { createStepper } from './stepper.js';
 
 const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
 const FACE_TEXT = { U: 'obere Seite', R: 'rechte Seite', F: 'vordere Seite' };
@@ -69,16 +70,17 @@ function solve() {
   render();
 }
 
-async function goTo(step, direction) {
-  if (!solution) return;
-  const target = Math.max(0, Math.min(solution.moves.length, step));
-  if (target === solution.step) return;
-  if (Math.abs(target - solution.step) === 1) {
-    const move = direction > 0 ? solution.moves[solution.step] : solution.moves[target];
-    await view.showMove(move, direction);
-  }
-  solution.step = target;
+const stepper = createStepper(view, () => solution);
+
+async function goTo(step) {
+  if (stepper.busy) return;
+  setNavDisabled(true);
+  await stepper.goTo(step);
   render();
+}
+
+function setNavDisabled(disabled) {
+  for (const id of ['first', 'prev', 'next', 'last']) $(id).disabled = disabled;
 }
 
 function renderSolution() {
@@ -158,10 +160,10 @@ $('clear').addEventListener('click', () => {
   setMessage('');
   render();
 });
-$('first').addEventListener('click', () => goTo(0, -1));
-$('prev').addEventListener('click', () => goTo(solution.step - 1, -1));
-$('next').addEventListener('click', () => goTo(solution.step + 1, 1));
-$('last').addEventListener('click', () => goTo(solution.moves.length, 1));
+$('first').addEventListener('click', () => goTo(0));
+$('prev').addEventListener('click', () => solution && goTo(solution.step - 1));
+$('next').addEventListener('click', () => solution && goTo(solution.step + 1));
+$('last').addEventListener('click', () => solution && goTo(solution.moves.length));
 render();
 
 // Let the page paint before the ~0.5 s table build.

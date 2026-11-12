@@ -40,7 +40,19 @@ test('mirrored corner', () => {
   [f[4], f[9]] = [f[9], f[4]];
   const r = parseFacelets(f);
   assert.equal(r.ok, false);
-  assert.match(r.error, /^Die Ecke mit /);
+  assert.equal(
+    r.error,
+    'Ecke oben-vorne-rechts (Weiß/Grün/Rot): Farben in falscher Reihenfolge – evtl. eine Seite gespiegelt eingegeben (B von hinten, D von unten gesehen).',
+  );
+});
+
+test('impossible corner names its position', () => {
+  const f = solved();
+  // URF shows W/R/Y (white and yellow are opposite) - fix counts by moving G to D
+  f[9] = 'Y';
+  f[13] = 'G';
+  const r = parseFacelets(f);
+  assert.equal(r.error, 'Ecke oben-vorne-rechts (Weiß/Rot/Gelb) gibt es auf einem Würfel nicht.');
 });
 
 test('twisted corner', () => {

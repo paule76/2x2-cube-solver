@@ -104,8 +104,20 @@ export const COLOR_NAMES = Object.freeze({ W: 'Weiß', Y: 'Gelb', G: 'Grün', B:
 const OPPOSITE = { W: 'Y', Y: 'W', G: 'B', B: 'G', R: 'O', O: 'R' };
 
 const fail = (error) => ({ ok: false, error });
-const cornerError = (colors) =>
-  fail(`Die Ecke mit ${colors.map((c) => COLOR_NAMES[c] ?? c).join('/')} gibt es auf einem Würfel nicht.`);
+const POSITION_NAMES = [
+  'oben-vorne-rechts', 'oben-vorne-links', 'oben-hinten-links', 'oben-hinten-rechts',
+  'unten-vorne-rechts', 'unten-vorne-links', 'unten-hinten-links', 'unten-hinten-rechts',
+];
+const cornerLabel = (pos, colors) =>
+  `Ecke ${POSITION_NAMES[pos]} (${colors.map((c) => COLOR_NAMES[c] ?? c).join('/')})`;
+const cornerError = (pos, colors, sides) => {
+  const sameSet = CORNER_COLORS.some((cc) => sides.every((s) => cc.includes(s)) && new Set(sides).size === 3);
+  return fail(
+    sameSet
+      ? `${cornerLabel(pos, colors)}: Farben in falscher Reihenfolge – evtl. eine Seite gespiegelt eingegeben (B von hinten, D von unten gesehen).`
+      : `${cornerLabel(pos, colors)} gibt es auf einem Würfel nicht.`,
+  );
+};
 
 /**
  * Reads 24 facelet colors (order U R F D L B) into a cube state.
@@ -123,7 +135,7 @@ export function parseFacelets(facelets) {
 
   const [d, b, l] = CORNER_FACELETS[6].map((i) => facelets[i]);
   const scheme = { D: d, B: b, L: l, U: OPPOSITE[d], F: OPPOSITE[b], R: OPPOSITE[l] };
-  if (new Set(Object.values(scheme)).size !== 6) return cornerError([d, b, l]);
+  if (new Set(Object.values(scheme)).size !== 6) return cornerError(6, [d, b, l], []);
   const sideOf = Object.fromEntries(Object.entries(scheme).map(([side, color]) => [color, side]));
 
   const cp = [];
@@ -141,7 +153,7 @@ export function parseFacelets(facelets) {
         }
       }
     }
-    if (!found) return cornerError(colors);
+    if (!found) return cornerError(i, colors, sides);
   }
   if (new Set(cp).size !== 8) return fail('Eine Ecke kommt doppelt vor – bitte Eingabe prüfen.');
   if (co.reduce((a, x) => a + x, 0) % 3 !== 0) {
