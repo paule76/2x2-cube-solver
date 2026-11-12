@@ -55,6 +55,13 @@ Solve · Random scramble · Reset to solved · Clear · Previous · Next · Firs
 Play / Pause · Speed (slow / normal / fast) · Reset view · Top/Right/Front/Bottom/Left/Back ·
 clockwise / counter-clockwise / half turn (180°) · “Already solved!” · “Done – the cube is solved! 🎉”.
 
+## Teil 3: Fußzeile und Lizenz
+- Lizenz: MIT, `LICENSE` im Repo-Root, „Copyright (c) 2026 paule76“; `package.json` `"license": "MIT"`.
+- Fußzeile `<footer>` unter dem Inhalt: Link „Quellcode auf GitHub“ / „Source on GitHub“
+  → `https://github.com/paule76/2x2-cube-solver` und „MIT-Lizenz“ / „MIT License“
+  → `https://github.com/paule76/2x2-cube-solver/blob/main/LICENSE`; beide übersetzt.
+- README: Abschnitt „Lizenz“.
+
 ## Tests
 - `i18n.test.js`: `de` und `en` haben exakt dieselben Schlüssel; Platzhalter in beiden gleich;
   `t` ersetzt Platzhalter; unbekannter Schlüssel → Schlüssel; `detectLang`-Fälle

@@ -43,6 +43,7 @@
 
 ### Task 4: Oberfläche zweisprachig
 **Files:** Modify `index.html`, `src/app.js`, `src/views/net-view.js`, `style.css`, `README.md`
+**Zusätzlich (Spec Teil 3):** Fußzeile mit übersetztem Repo- und Lizenz-Link; README-Abschnitt „Lizenz“. `LICENSE` + `package.json` werden vorab committet.
 **Acceptance Criteria:** DE|EN-Umschalter im Header (`aria-pressed`); alle festen Texte über `data-i18n`; `<html lang>`, Titel, Beschreibung gesetzt; Meldung, Schritt-Text, Play-Button, Rückfragen, Farbnamen, Seitennamen übersetzt; Umschalten übersetzt die aktuelle Meldung neu; Wahl bleibt nach Reload; Start in Browsersprache.
 - [ ] Step 1: Implementieren
 - [ ] Step 2: `npm test` → PASS
