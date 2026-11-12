@@ -1,6 +1,6 @@
 // 3D view: the cube as 8 CSS-3D cubies. Implements the view interface
 // { render(facelets), showMove(move, direction), showHint(move|null), highlight(index|null) }.
-import { STICKERS, CUBIES, FACE_NORMALS } from '../geometry.js';
+import { STICKERS, CUBIES, FACE_NORMALS, inLayer, rotation, cssRotate } from '../geometry.js';
 
 const DEFAULT_CAMERA = { x: -25, y: -35 };
 const DRAG_THRESHOLD = 5; // px before a press counts as camera drag
@@ -18,6 +18,18 @@ const FACE_TRANSFORMS = {
 
 const sameVec = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 const NO_ROTATION = 'rotateX(0deg)';
+const TURN_MS = 300;
+
+const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+// Curved clockwise arrow (≈270°) with an arrow head; mirrored for counter-clockwise.
+const ARROW_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true">
+  <g class="arrow-path">
+    <path d="M 50 22 A 28 28 0 1 1 22 50" />
+    <polygon points="22,34 12,54 32,54" />
+  </g>
+  <text x="50" y="50" class="arrow-double">2</text>
+</svg>`;
 
 /**
  * @param {HTMLElement} container
@@ -112,6 +124,16 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
     if (sticker) onStickerClick(Number(sticker.dataset.index));
   });
 
+  const hint = document.createElement('div');
+  hint.className = 'hint-arrow';
+  hint.innerHTML = ARROW_SVG;
+  hint.hidden = true;
+  cam.append(hint);
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   resetCubies();
   applyCamera();
 
@@ -122,10 +144,35 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
         stickers[i].dataset.color = color ?? '';
       });
     },
-    showMove() {
-      return Promise.resolve();
+    /** Animates the layer turn; the app renders the resulting state afterwards. */
+    async showMove(move, direction) {
+      hint.hidden = true;
+      const { axis, degrees } = rotation(move);
+      const duration = reducedMotion() ? 0 : TURN_MS;
+      const layer = cubies.filter((c) => inLayer(c.position, move.face));
+      for (const c of layer) {
+        c.el.style.transition = 'none';
+        c.el.style.transform = `${cssRotate({ axis, degrees: 0 })} ${c.translate}`;
+      }
+      if (duration === 0) return;
+      void cam.offsetWidth; // commit the start transform before transitioning
+      const end = new Promise((resolve) => {
+        layer[0].el.addEventListener('transitionend', resolve, { once: true });
+      });
+      for (const c of layer) {
+        c.el.style.transition = `transform ${duration}ms ease-in-out`;
+        c.el.style.transform = `${cssRotate({ axis, degrees: degrees * direction })} ${c.translate}`;
+      }
+      await Promise.race([end, wait(duration + 100)]); // fallback if transitionend never fires
     },
-    showHint() {},
+    showHint(move) {
+      hint.hidden = !move;
+      if (!move) return;
+      hint.dataset.face = move.face;
+      hint.classList.toggle('ccw', move.turns === -1);
+      hint.classList.toggle('double', move.turns === 2);
+      hint.style.transform = `${FACE_TRANSFORMS[move.face]} translateZ(calc(var(--s) + 3px))`;
+    },
     highlight(index) {
       stickers.forEach((s, i) => s.classList.toggle('highlighted', i === index));
     },

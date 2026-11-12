@@ -226,3 +226,35 @@ button.small:not(.cell):not(.swatch) { font-size: 0.875rem; padding: 4px 10px; }
 }
 .cube3d .sticker[data-color=""] { background: var(--cell-empty); }
 .cube3d .sticker.highlighted { box-shadow: 0 0 0 3px var(--highlight) inset; }
+
+/* Direction arrow for the next move */
+.cube3d .hint-arrow {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: calc(var(--s) * 2); height: calc(var(--s) * 2);
+  margin: calc(var(--s) * -1) 0 0 calc(var(--s) * -1);
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+.cube3d .hint-arrow[hidden] { display: none; }
+.cube3d .hint-arrow svg { width: 100%; height: 100%; overflow: visible; }
+.cube3d .hint-arrow.ccw svg { transform: scaleX(-1); }
+.cube3d .hint-arrow path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 7;
+  stroke-linecap: round;
+  paint-order: stroke;
+  filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 1px #000);
+}
+.cube3d .hint-arrow polygon { fill: #fff; filter: drop-shadow(0 0 2px #000); }
+.cube3d .hint-arrow .arrow-double {
+  display: none;
+  font: 700 30px system-ui, sans-serif;
+  fill: #fff;
+  text-anchor: middle;
+  dominant-baseline: central;
+  filter: drop-shadow(0 0 2px #000);
+}
+.cube3d .hint-arrow.double .arrow-double { display: inline; }
+.cube3d .hint-arrow.ccw .arrow-double { transform: scaleX(-1); transform-origin: 50px 50px; }

@@ -123,6 +123,7 @@ function renderPalette() {
 
 function render() {
   view.render(displayed());
+  view.showHint(solution && solution.step < solution.moves.length ? solution.moves[solution.step] : null);
   renderPalette();
   renderSolution();
 }
