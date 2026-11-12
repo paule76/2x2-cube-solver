@@ -8,6 +8,14 @@ Statische Web-App, die einen 2x2-Zauberwürfel **optimal** löst (kürzestmögli
 2. **Lösen** drücken.
 3. Mit **Weiter / Zurück** die Züge Schritt für Schritt durchgehen. Das Netz zeigt jeweils den Zwischenstand.
 
+### 3D-Ansicht
+
+- Neben dem Netz zeigt ein 3D-Würfel den aktuellen Stand. **Ziehen** (Maus/Finger) dreht die Ansicht, „Ansicht zurücksetzen“ stellt sie wieder her.
+- Ein **Pfeil** zeigt Seite und Richtung des nächsten Zugs; bei „Weiter“/„Zurück“ dreht sich die Schicht animiert (bei „Bewegung reduzieren“ ohne Animation).
+- **Abspielen** spielt die Lösung automatisch ab (Tempo langsam / normal / schnell).
+- Fährt man im Netz über ein Feld, leuchtet derselbe Sticker im 3D-Würfel auf; ein Klick auf einen 3D-Sticker markiert das Feld im Netz.
+- **Tastatur:** ← / → Zurück / Weiter, Pos1 / Ende, Leertaste = Abspielen / Pause.
+
 Notation: `R` = rechte Seite im Uhrzeigersinn (mit Blick auf die Seite), `R'` = gegen den Uhrzeigersinn, `R2` = halbe Drehung. Es werden nur die Seiten U, R und F gedreht – die Ecke hinten-unten-links bleibt an ihrem Platz.
 
 ## Wie es funktioniert
@@ -19,9 +27,14 @@ Mit fester DBL-Ecke hat der 2x2 genau 7! · 3⁶ = 3.674.160 Zustände. Beim Lad
 | `src/cube.js` | Würfelmodell, Züge, Netz ↔ Zustand, Validierung |
 | `src/solver.js` | Distanztabelle und Lösungssuche |
 | `src/views/net-view.js` | Netz-Ansicht |
+| `src/views/cube3d-view.js` | 3D-Ansicht (CSS-3D), Animation, Pfeile |
+| `src/geometry.js` | 3D-Lage der Sticker, Schicht-Drehungen |
+| `src/player.js`, `src/keys.js`, `src/stepper.js` | Autoplay, Tastatur, Schritt-Navigation |
 | `src/app.js` | Bedienung, Schritt-Navigation |
 
-Ansichten implementieren die Schnittstelle `{ render(facelets), showMove(move, direction) }`. Ein späteres 3D-Modell kann als weitere View (z. B. `src/views/cube3d-view.js`) ergänzt werden, ohne Modell oder Solver zu ändern.
+Ansichten implementieren die Schnittstelle `{ render(facelets), showMove(move, direction), showHint?(move), highlight?(index) }`; die App verteilt Aufrufe an Netz und 3D-Ansicht.
+
+Unterstützt wird das Standard-Farbschema (Weiß↔Gelb, Grün↔Blau, Rot↔Orange gegenüber).
 
 ## Lokal starten
 

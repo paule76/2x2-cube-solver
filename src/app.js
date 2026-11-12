@@ -4,6 +4,8 @@ import { createNetView } from './views/net-view.js';
 import { createCube3dView } from './views/cube3d-view.js';
 import { createStepper } from './stepper.js';
 import { stepText, describeMove } from './step-text.js';
+import { createPlayer } from './player.js';
+import { keyAction } from './keys.js';
 
 const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
 
@@ -55,12 +57,14 @@ function onCellClick(index) {
 }
 
 function clearSolution() {
+  player.pause();
   solution = null;
   $('solution').hidden = true;
 }
 
 function solve() {
   if (!solver) return;
+  player.pause();
   const r = parseFacelets(input);
   if (!r.ok) {
     clearSolution();
@@ -88,6 +92,40 @@ async function goTo(step) {
   setNavDisabled(true);
   await stepper.goTo(step);
   render();
+}
+
+const atEnd = () => !solution || solution.step >= solution.moves.length;
+
+const player = createPlayer({
+  async step() {
+    if (atEnd()) return false;
+    await goTo(solution.step + 1);
+    return !atEnd();
+  },
+  setTimeout: (fn, ms) => setTimeout(fn, ms),
+  clearTimeout: (t) => clearTimeout(t),
+  onChange: (playing) => {
+    $('play').textContent = playing ? '⏸ Pause' : '▶ Abspielen';
+    $('play').setAttribute('aria-pressed', String(playing));
+  },
+});
+
+function togglePlay() {
+  if (!solution) return;
+  if (!player.playing && atEnd()) {
+    solution.step = 0; // replay from the start
+    render();
+  }
+  player.toggle();
+}
+
+/** Manual navigation stops autoplay. */
+function navigate(action) {
+  if (!solution) return;
+  if (action === 'toggle') return togglePlay();
+  player.pause();
+  const target = { first: 0, prev: solution.step - 1, next: solution.step + 1, last: solution.moves.length }[action];
+  goTo(target);
 }
 
 function setNavDisabled(disabled) {
@@ -169,10 +207,18 @@ $('clear').addEventListener('click', () => {
   setMessage('');
   render();
 });
-$('first').addEventListener('click', () => goTo(0));
-$('prev').addEventListener('click', () => solution && goTo(solution.step - 1));
-$('next').addEventListener('click', () => solution && goTo(solution.step + 1));
-$('last').addEventListener('click', () => solution && goTo(solution.moves.length));
+for (const action of ['first', 'prev', 'next', 'last']) {
+  $(action).addEventListener('click', () => navigate(action));
+}
+$('play').addEventListener('click', togglePlay);
+$('tempo').addEventListener('change', (e) => player.setTempo(e.target.value));
+document.addEventListener('keydown', (e) => {
+  if (!solution) return;
+  const action = keyAction(e);
+  if (!action) return;
+  e.preventDefault();
+  navigate(action);
+});
 render();
 
 // Let the page paint before the ~0.5 s table build.
