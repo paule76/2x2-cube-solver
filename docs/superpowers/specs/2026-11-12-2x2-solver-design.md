@@ -47,11 +47,26 @@ nach deren Ausführung der Würfel gelöst ist.
 - Bereits gelöster Würfel → Hinweis „Schon gelöst“.
 - Während der Tabellen-Berechnung: Status „Initialisiere…“, Lösen-Button deaktiviert.
 
+## Vorbereitung für ein späteres 3D-Modell
+Das 3D-Modell wird **jetzt nicht gebaut**, aber die Struktur lässt es ohne Umbau zu:
+- **Ansichten als austauschbare Renderer:** `app.js` spricht nur mit einer
+  View-Schnittstelle `{ render(facelets), showMove(move, direction) }`.
+  Jetzt gibt es `src/views/net-view.js`; später kommt `src/views/cube3d-view.js`
+  daneben (z. B. per CSS-3D), ohne Änderungen an Modell oder Solver.
+- **Facelet-Darstellung als gemeinsame Sprache:** `cube.js` liefert für jeden
+  Zustand ein Array von 24 Farben in fester Reihenfolge (U, R, F, D, L, B; je 4).
+  Netz- und 3D-Ansicht rendern beide aus diesem Array.
+- **Züge als Daten:** Ein Zug ist ein Objekt `{ face, turns }` (z. B. `{face:'R', turns:-1}`),
+  damit eine Animation Drehachse und Richtung direkt ablesen kann.
+- **`showMove` darf asynchron sein** (Promise), damit eine Animation die
+  Schritt-Navigation sperren kann, bis sie fertig ist. Die Netz-Ansicht löst sofort auf.
+
 ## Dateien
 - `index.html`, `style.css`
 - `src/cube.js` – Modell, Züge, Netz ↔ Zustand, Validierung
 - `src/solver.js` – Tabellen, Lösungssuche (ohne DOM)
-- `src/app.js` – UI
+- `src/app.js` – UI-Steuerung (Palette, Validierung, Schritt-Navigation)
+- `src/views/net-view.js` – Netz-Ansicht (Eingabe + Anzeige)
 - `test/*.test.js` – `node --test`
 - `.github/workflows/pages.yml` – Deployment auf GitHub Pages (Push auf `main`)
 - `package.json` (nur `"type": "module"` und `test`-Script), `README.md`
@@ -68,4 +83,4 @@ nach deren Ausführung der Würfel gelöst ist.
 - Einmalig im Repo: Settings → Pages → Source: „GitHub Actions“.
 
 ## Nicht im Umfang
-3D-Animation, Kamera-Scan, Scramble-Eingabe per Notation.
+3D-Animation (nur vorbereitet, s. o.), Kamera-Scan, Scramble-Eingabe per Notation.
