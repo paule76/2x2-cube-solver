@@ -19,6 +19,7 @@ const FACE_TRANSFORMS = {
 const sameVec = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
 const NO_ROTATION = 'rotateX(0deg)';
 const TURN_MS = 300;
+const HALF_TURN_PAUSE_MS = 400;
 
 const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -136,6 +137,35 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
   hint.hidden = true;
   cam.append(hint);
 
+  const counter = document.createElement('div');
+  counter.className = 'turn-count';
+  counter.hidden = true;
+  cam.append(counter);
+
+  function showCount(face, n) {
+    counter.hidden = !face;
+    if (!face) return;
+    counter.textContent = String(n);
+    counter.style.transform = `${FACE_TRANSFORMS[face]} translateZ(calc(var(--s) + 4px))`;
+  }
+
+  function setLayer(layer, axis, deg, ms) {
+    for (const c of layer) {
+      c.el.style.transition = ms ? `transform ${ms}ms ease-in-out` : 'none';
+      c.el.style.transform = `${cssRotate({ axis, degrees: deg })} ${c.translate}`;
+    }
+  }
+
+  /** Transitions the layer to `deg`; resolves on transitionend or after a fallback timeout. */
+  async function turnLayer(layer, axis, deg, ms) {
+    void cam.offsetWidth; // commit the current transform before transitioning
+    const end = new Promise((resolve) => {
+      layer[0].el.addEventListener('transitionend', resolve, { once: true });
+    });
+    setLayer(layer, axis, deg, ms);
+    await Promise.race([end, wait(ms + 100)]);
+  }
+
   function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -150,26 +180,30 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
         stickers[i].dataset.color = color ?? '';
       });
     },
-    /** Animates the layer turn; the app renders the resulting state afterwards. */
+    /**
+     * Animates the layer turn; the app renders the resulting state afterwards.
+     * Half turns run as two counted quarter turns with a pause in between.
+     */
     async showMove(move, direction) {
       hint.hidden = true;
       const { axis, degrees } = rotation(move);
-      const duration = reducedMotion() ? 0 : TURN_MS;
       const layer = cubies.filter((c) => inLayer(c.position, move.face));
-      for (const c of layer) {
-        c.el.style.transition = 'none';
-        c.el.style.transform = `${cssRotate({ axis, degrees: 0 })} ${c.translate}`;
+      const target = degrees * direction;
+      setLayer(layer, axis, 0, 0);
+      if (reducedMotion()) return;
+      if (move.turns !== 2) {
+        await turnLayer(layer, axis, target, TURN_MS);
+        return;
       }
-      if (duration === 0) return;
-      void cam.offsetWidth; // commit the start transform before transitioning
-      const end = new Promise((resolve) => {
-        layer[0].el.addEventListener('transitionend', resolve, { once: true });
-      });
-      for (const c of layer) {
-        c.el.style.transition = `transform ${duration}ms ease-in-out`;
-        c.el.style.transform = `${cssRotate({ axis, degrees: degrees * direction })} ${c.translate}`;
+      try {
+        showCount(move.face, 1);
+        await turnLayer(layer, axis, target / 2, TURN_MS);
+        await wait(HALF_TURN_PAUSE_MS);
+        showCount(move.face, 2);
+        await turnLayer(layer, axis, target, TURN_MS);
+      } finally {
+        showCount(null);
       }
-      await Promise.race([end, wait(duration + 100)]); // fallback if transitionend never fires
     },
     showHint(move) {
       hint.hidden = !move;

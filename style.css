@@ -273,3 +273,18 @@ button.small:not(.cell):not(.swatch) { font-size: 0.875rem; padding: 4px 10px; }
 }
 .keys-hint { color: var(--muted); font-size: 0.875rem; }
 @media (hover: none) { .keys-hint { display: none; } }
+
+/* Counter for half turns ("1", "2") */
+.cube3d .turn-count {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: calc(var(--s) * 2); height: calc(var(--s) * 2);
+  margin: calc(var(--s) * -1) 0 0 calc(var(--s) * -1);
+  display: flex; align-items: center; justify-content: center;
+  font: 800 calc(var(--s) * 1.1) / 1 system-ui, sans-serif;
+  color: #fff;
+  text-shadow: 0 0 4px #000, 0 0 2px #000;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+.cube3d .turn-count[hidden] { display: none; }
