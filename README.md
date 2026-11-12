@@ -12,6 +12,7 @@ Statische Web-App, die einen 2x2-Zauberwürfel **optimal** löst (kürzestmögli
 ### 3D-Ansicht
 
 - Neben dem Netz zeigt ein 3D-Würfel den aktuellen Stand. **Ziehen** (Maus/Finger) dreht die Ansicht, „Ansicht zurücksetzen“ stellt sie wieder her.
+- Halbe Drehungen (`R2`, `U2`, `F2`) laufen als zwei Vierteldrehungen mit kurzer Pause; ein Zähler „1“ / „2“ hilft beim Mitzählen.
 - Ein **Pfeil** zeigt Seite und Richtung des nächsten Zugs; bei „Weiter“/„Zurück“ dreht sich die Schicht animiert (bei „Bewegung reduzieren“ ohne Animation).
 - **Abspielen** spielt die Lösung automatisch ab (Tempo langsam / normal / schnell).
 - Fährt man im Netz über ein Feld, leuchtet derselbe Sticker im 3D-Würfel auf; ein Klick auf einen 3D-Sticker markiert das Feld im Netz.
@@ -37,6 +38,8 @@ Mit fester DBL-Ecke hat der 2x2 genau 7! · 3⁶ = 3.674.160 Zustände. Beim Lad
 
 Ansichten implementieren die Schnittstelle `{ render(facelets), showMove(move, direction), showHint?(move), highlight?(index) }`; die App verteilt Aufrufe an Netz und 3D-Ansicht.
 
+Die Oberfläche gibt es auf **Deutsch und Englisch** (Umschalter oben rechts; Start in der Browsersprache, die Wahl wird gemerkt). Texte stehen in `src/i18n.js`; ein Test prüft, dass beide Sprachen dieselben Schlüssel haben.
+
 Unterstützt wird das Standard-Farbschema (Weiß↔Gelb, Grün↔Blau, Rot↔Orange gegenüber).
 
 ## Lokal starten
@@ -59,3 +62,7 @@ npm test   # Node ≥ 20 (CI: Node 24), keine Abhängigkeiten
 Der Workflow `.github/workflows/pages.yml` testet und veröffentlicht bei jedem Push auf `main`.
 
 Einmalig im Repository einstellen: **Settings → Pages → Build and deployment → Source: „GitHub Actions“**.
+
+## Lizenz
+
+[MIT](LICENSE) – Copyright (c) 2026 paule76

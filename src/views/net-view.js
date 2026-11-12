@@ -11,14 +11,20 @@ const FACES = [
   { face: 'D', start: 12, col: 2, row: 3 },
 ];
 
-const FACE_NAMES = { U: 'Oben', L: 'Links', F: 'Vorne', R: 'Rechts', B: 'Hinten', D: 'Unten' };
 
 /**
  * @param {HTMLElement} container
  * @param {{ onCellClick(index: number): void, onCellHover?(index: number|null): void,
- *           colorName?(color: string|null): string }} options
+ *           cellLabel?(side: string, n: number, color: string|null): string,
+ *           sideName?(side: string): string }} options
  */
-export function createNetView(container, { onCellClick, onCellHover = () => {}, colorName = (c) => c ?? 'leer' }) {
+export function createNetView(container, {
+  onCellClick,
+  onCellHover = () => {},
+  cellLabel = (side, n, color) => `${side} ${n}: ${color ?? '-'}`,
+  sideName = (side) => side,
+}) {
+  const labels = [];
   const cells = new Array(24);
   container.classList.add('net');
   container.replaceChildren();
@@ -31,7 +37,7 @@ export function createNetView(container, { onCellClick, onCellHover = () => {}, 
     const label = document.createElement('span');
     label.className = 'face-label';
     label.textContent = face;
-    label.title = FACE_NAMES[face];
+    labels.push([label, face]);
     el.append(label);
     for (let k = 0; k < 4; k++) {
       const index = start + k;
@@ -52,11 +58,12 @@ export function createNetView(container, { onCellClick, onCellHover = () => {}, 
 
   return {
     render(facelets) {
+      for (const [label, face] of labels) label.title = sideName(face);
       facelets.forEach((color, i) => {
         const cell = cells[i];
         cell.dataset.color = color ?? '';
         const face = FACES.find((f) => i >= f.start && i < f.start + 4);
-        cell.setAttribute('aria-label', `${FACE_NAMES[face.face]}, Feld ${i - face.start + 1}: ${colorName(color)}`);
+        cell.setAttribute('aria-label', cellLabel(face.face, i - face.start + 1, color));
       });
     },
     // The flat net has no animation.

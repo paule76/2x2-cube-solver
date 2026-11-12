@@ -288,3 +288,23 @@ button.small:not(.cell):not(.swatch) { font-size: 0.875rem; padding: 4px 10px; }
   backface-visibility: hidden;
 }
 .cube3d .turn-count[hidden] { display: none; }
+
+/* Header with language switch */
+.header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.lang-switch button.lang:not(.cell):not(.swatch) {
+  border: 0; border-radius: 0; padding: 4px 10px; font-size: 0.875rem; font-weight: 600;
+}
+.lang-switch button.lang[aria-pressed="true"]:not(.cell):not(.swatch) { background: var(--accent); color: var(--accent-text); }
+
+/* Footer */
+.site-footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.site-footer a { color: var(--muted); }
+.site-footer a:hover { color: var(--accent); }

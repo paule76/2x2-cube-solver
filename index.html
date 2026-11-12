@@ -3,63 +3,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2x2 Würfel-Löser</title>
-  <meta name="description" content="Gib die Farben deines 2x2-Würfels ein und erhalte die kürzeste Lösung Schritt für Schritt.">
+  <title data-i18n="meta.title">2x2 Würfel-Löser</title>
+  <meta name="description" id="meta-description" content="Gib die Farben deines 2x2-Würfels ein und erhalte die kürzeste Lösung Schritt für Schritt.">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="src/app.js"></script>
 </head>
 <body>
   <main>
     <header>
-      <h1>2x2 Würfel-Löser</h1>
-      <p class="lead">Färbe das Netz wie deinen Würfel ein und drücke „Lösen“. Du bekommst die kürzestmögliche Lösung (höchstens 11 Züge).</p>
+      <div class="header-row">
+        <h1 data-i18n="app.title">2x2 Würfel-Löser</h1>
+        <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Sprache">
+          <button type="button" class="lang" data-lang="de" lang="de" aria-pressed="true">DE</button>
+          <button type="button" class="lang" data-lang="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+      <p class="lead" data-i18n="app.lead">Färbe das Netz wie deinen Würfel ein und drücke „Lösen“. Du bekommst die kürzestmögliche Lösung (höchstens 11 Züge).</p>
     </header>
 
     <section class="panel" aria-labelledby="input-title">
-      <h2 id="input-title">Würfel eingeben</h2>
-      <div class="palette" id="palette" role="radiogroup" aria-label="Farbe wählen"></div>
+      <h2 id="input-title" data-i18n="input.title">Würfel eingeben</h2>
+      <div class="palette" id="palette" role="radiogroup" data-i18n-attr="aria-label:palette.label" aria-label="Farbe wählen"></div>
       <div class="views">
         <div class="view-net">
           <div class="net" id="net"></div>
-          <p class="hint net-hint">So liest du das Netz: Die Mitte ist <strong>vorne (F)</strong>. Seite <strong>B</strong> so eintragen, wie du sie von hinten siehst (ihre linke Spalte grenzt an R). Seite <strong>D</strong> so, wie du sie von unten siehst, mit der Vorderkante oben.</p>
+          <p class="hint net-hint" data-i18n-html="net.hintHtml">So liest du das Netz: Die Mitte ist <strong>vorne (F)</strong>. Seite <strong>B</strong> so eintragen, wie du sie von hinten siehst (ihre linke Spalte grenzt an R). Seite <strong>D</strong> so, wie du sie von unten siehst, mit der Vorderkante oben.</p>
         </div>
         <div class="view-3d">
           <div id="cube3d"></div>
-          <button type="button" id="reset-camera" class="small">Ansicht zurücksetzen</button>
+          <button type="button" id="reset-camera" class="small" data-i18n="camera.reset">Ansicht zurücksetzen</button>
         </div>
       </div>
       <div class="actions">
-        <button type="button" id="solve" class="primary" disabled>Lösen</button>
-        <button type="button" id="scramble">Zufällig mischen</button>
-        <button type="button" id="reset">Gelöst zurücksetzen</button>
-        <button type="button" id="clear">Leeren</button>
+        <button type="button" id="solve" class="primary" disabled data-i18n="button.solve">Lösen</button>
+        <button type="button" id="scramble" data-i18n="button.scramble">Zufällig mischen</button>
+        <button type="button" id="reset" data-i18n="button.reset">Gelöst zurücksetzen</button>
+        <button type="button" id="clear" data-i18n="button.clear">Leeren</button>
       </div>
       <p id="message" class="message" role="status" aria-live="polite">Initialisiere Solver…</p>
     </section>
 
     <section class="panel" id="solution" aria-labelledby="solution-title" hidden>
-      <h2 id="solution-title">Lösung</h2>
-      <p class="hint">Halte den Würfel so, wie du ihn eingegeben hast: U oben, F vorne. Drehrichtung jeweils mit Blick auf die Seite.</p>
+      <h2 id="solution-title" data-i18n="solution.title">Lösung</h2>
+      <p class="hint" data-i18n="solution.hint">Halte den Würfel so, wie du ihn eingegeben hast: U oben, F vorne. Drehrichtung jeweils mit Blick auf die Seite.</p>
       <ol class="moves" id="moves"></ol>
       <p class="step" id="step-text" aria-live="polite"></p>
       <div class="actions nav">
-        <button type="button" id="first" aria-label="Zum Anfang">⏮ Anfang</button>
-        <button type="button" id="prev">◀ Zurück</button>
-        <button type="button" id="next" class="primary">Weiter ▶</button>
-        <button type="button" id="last" aria-label="Zum Ende">Ende ⏭</button>
+        <button type="button" id="first" data-i18n="nav.first" data-i18n-attr="aria-label:nav.firstLabel" aria-label="Zum Anfang">⏮ Anfang</button>
+        <button type="button" id="prev" data-i18n="nav.prev">◀ Zurück</button>
+        <button type="button" id="next" class="primary" data-i18n="nav.next">Weiter ▶</button>
+        <button type="button" id="last" data-i18n="nav.last" data-i18n-attr="aria-label:nav.lastLabel" aria-label="Zum Ende">Ende ⏭</button>
       </div>
       <div class="actions playback">
         <button type="button" id="play">▶ Abspielen</button>
-        <label class="tempo">Tempo
+        <label class="tempo"><span data-i18n="tempo.label">Tempo</span>
           <select id="tempo">
-            <option value="langsam">langsam</option>
-            <option value="normal" selected>normal</option>
-            <option value="schnell">schnell</option>
+            <option value="langsam" data-i18n="tempo.langsam">langsam</option>
+            <option value="normal" selected data-i18n="tempo.normal">normal</option>
+            <option value="schnell" data-i18n="tempo.schnell">schnell</option>
           </select>
         </label>
-        <span class="keys-hint">Tasten: ← → · Pos1/Ende · Leertaste</span>
+        <span class="keys-hint" data-i18n="keys.hint">Tasten: ← → · Pos1/Ende · Leertaste</span>
       </div>
     </section>
   </main>
+  <footer class="site-footer">
+    <a href="https://github.com/paule76/2x2-cube-solver" data-i18n="footer.source">Quellcode auf GitHub</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/paule76/2x2-cube-solver/blob/main/LICENSE" data-i18n="footer.license">MIT-Lizenz</a>
+  </footer>
 </body>
 </html>

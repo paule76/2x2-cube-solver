@@ -1,4 +1,4 @@
-import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMove, applyMoves, moveToString, isSolved } from './cube.js';
+import { SOLVED, toFacelets, parseFacelets, applyMove, applyMoves, moveToString, isSolved } from './cube.js';
 import { createSolver } from './solver.js';
 import { createNetView } from './views/net-view.js';
 import { createCube3dView } from './views/cube3d-view.js';
@@ -8,10 +8,28 @@ import { createPlayer } from './player.js';
 import { keyAction } from './keys.js';
 import { randomScramble } from './scramble.js';
 import { createConfirm } from './confirm.js';
+import { createI18n, detectLang, LANGS } from './i18n.js';
+import { formatParseError } from './messages.js';
 
 const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
 
 const $ = (id) => document.getElementById(id);
+
+// --- Language ---------------------------------------------------------------
+
+const LANG_KEY = 'cube-solver-lang';
+function readStoredLang() {
+  try {
+    return localStorage.getItem(LANG_KEY);
+  } catch {
+    return null;
+  }
+}
+const i18n = createI18n({
+  lang: detectLang({ stored: readStoredLang(), navigatorLanguages: navigator.languages ?? [navigator.language] }),
+});
+const t = i18n.t;
+const colorName = (c) => t(c ? `color.${c}` : 'color.empty');
 
 let solver = null;
 let selected = 'W';
@@ -22,7 +40,8 @@ let solution = null;
 const net = createNetView($('net'), {
   onCellClick,
   onCellHover: (index) => cube3d.highlight(index),
-  colorName: (c) => (c ? COLOR_NAMES[c] : 'leer'),
+  cellLabel: (side, n, color) => t('cell.label', { side: t(`side.${side}`), n, color: colorName(color) }),
+  sideName: (side) => t(`side.${side}`),
 });
 const cube3d = createCube3dView($('cube3d'), {
   onStickerClick: (index) => net.highlight(index),
@@ -41,10 +60,23 @@ function displayed() {
   return toFacelets(applyMoves(solution.state, solution.moves.slice(0, solution.step)), solution.scheme);
 }
 
-function setMessage(text, kind = '') {
+/** The message is kept as a function so it can be re-translated when the language changes. */
+let message = { text: () => '', kind: '', key: '' };
+
+function setMessage(key, params = {}, kind = '') {
+  message = { text: () => (key ? t(key, params) : ''), kind, key };
+  renderMessage();
+}
+
+function setErrorMessage(result) {
+  message = { text: () => formatParseError(result, t), kind: 'error', key: `error.${result.code}` };
+  renderMessage();
+}
+
+function renderMessage() {
   const el = $('message');
-  el.textContent = text;
-  el.className = `message ${kind}`.trim();
+  el.textContent = message.text();
+  el.className = `message ${message.kind}`.trim();
 }
 
 function onCellClick(index) {
@@ -56,7 +88,7 @@ function onCellClick(index) {
     clearSolution();
   }
   input[index] = selected;
-  setMessage('');
+  setMessage(null);
   render();
 }
 
@@ -72,19 +104,20 @@ function solve() {
   const r = parseFacelets(input);
   if (!r.ok) {
     clearSolution();
-    setMessage(r.error, 'error');
+    setErrorMessage(r);
     render();
     return;
   }
   const moves = solver.solve(r.state);
   if (moves.length === 0) {
     clearSolution();
-    setMessage('Schon gelöst!', 'success');
+    setMessage('msg.alreadySolved', {}, 'success');
     render();
     return;
   }
   solution = { state: r.state, scheme: r.scheme, moves, step: 0 };
-  setMessage(`Lösung gefunden: ${moves.length} ${moves.length === 1 ? 'Zug' : 'Züge'}.`, 'success');
+  if (moves.length === 1) setMessage('msg.foundOne', {}, 'success');
+  else setMessage('msg.foundMany', { count: moves.length }, 'success');
   $('solution').hidden = false;
   render();
 }
@@ -109,11 +142,13 @@ const player = createPlayer({
   },
   setTimeout: (fn, ms) => setTimeout(fn, ms),
   clearTimeout: (t) => clearTimeout(t),
-  onChange: (playing) => {
-    $('play').textContent = playing ? '⏸ Pause' : '▶ Abspielen';
-    $('play').setAttribute('aria-pressed', String(playing));
-  },
+  onChange: renderPlayButton,
 });
+
+function renderPlayButton() {
+  $('play').textContent = t(player.playing ? 'play.pause' : 'play.play');
+  $('play').setAttribute('aria-pressed', String(player.playing));
+}
 
 function togglePlay() {
   if (!solution) return;
@@ -144,11 +179,11 @@ function renderSolution() {
       li.textContent = moveToString(m);
       if (i < step) li.className = 'done';
       if (i === step) li.className = 'current';
-      li.title = describeMove(m);
+      li.title = describeMove(m, t);
       return li;
     }),
   );
-  $('step-text').textContent = stepText(moves, step);
+  $('step-text').textContent = stepText(moves, step, t);
   $('first').disabled = $('prev').disabled = step === 0;
   $('next').disabled = $('last').disabled = step === moves.length;
 }
@@ -156,6 +191,8 @@ function renderSolution() {
 function renderPalette() {
   for (const btn of $('palette').children) {
     const on = btn.dataset.color === selected;
+    btn.setAttribute('aria-label', colorName(btn.dataset.color));
+    btn.title = colorName(btn.dataset.color);
     btn.setAttribute('aria-checked', String(on));
     btn.tabIndex = on ? 0 : -1;
   }
@@ -176,8 +213,6 @@ function buildPalette() {
     btn.className = 'swatch';
     btn.dataset.color = c;
     btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-label', COLOR_NAMES[c]);
-    btn.title = COLOR_NAMES[c];
     btn.addEventListener('click', () => {
       selected = c;
       renderPalette();
@@ -203,14 +238,14 @@ $('reset-camera').addEventListener('click', () => cube3d.resetCamera());
 function resetToSolved() {
   input = toFacelets(SOLVED);
   clearSolution();
-  setMessage('');
+  setMessage(null);
   render();
 }
 
 function clearInput() {
   input = new Array(24).fill(null);
   clearSolution();
-  setMessage('');
+  setMessage(null);
   render();
 }
 
@@ -229,7 +264,7 @@ async function scramble() {
   setInputButtonsDisabled(true);
   try {
     clearSolution();
-    setMessage('Mische …');
+    setMessage('msg.scrambling');
     let state = SOLVED;
     input = toFacelets(state);
     render();
@@ -239,7 +274,7 @@ async function scramble() {
       input = toFacelets(state);
       render();
     }
-    setMessage(`Gemischt mit: ${moves.map(moveToString).join(' ')} – jetzt „Lösen“ drücken.`);
+    setMessage('msg.scrambled', { moves: moves.map(moveToString).join(' ') });
   } finally {
     scrambling = false;
     setInputButtonsDisabled(false);
@@ -258,24 +293,23 @@ const NEEDS_CONFIRM = {
   reset: () => !isEmpty() && !isSolvedInput(),
   scramble: () => !isEmpty() && !isSolvedInput(),
 };
-const CONFIRM_LABELS = { clear: 'Wirklich leeren?', reset: 'Wirklich zurücksetzen?', scramble: 'Wirklich mischen?' };
 const ACTIONS = { clear: clearInput, reset: resetToSolved, scramble };
 const confirms = {};
 
 for (const id of Object.keys(ACTIONS)) {
   const button = $(id);
-  const label = button.textContent;
   confirms[id] = createConfirm({
     setTimeout: (fn, ms) => setTimeout(fn, ms),
     clearTimeout: (t) => clearTimeout(t),
     onArm: () => {
-      button.textContent = CONFIRM_LABELS[id];
+      button.textContent = t(`confirm.${id}`);
       button.classList.add('danger');
-      setMessage('Zum Bestätigen noch einmal klicken.');
+      setMessage('confirm.hint');
     },
     onDisarm: () => {
-      button.textContent = label;
+      button.textContent = t(`button.${id}`);
       button.classList.remove('danger');
+      if (message.key === 'confirm.hint') setMessage(null);
     },
   });
   button.addEventListener('click', () => {
@@ -303,11 +337,49 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault();
   navigate(action);
 });
-render();
+// --- Static texts and language switch ---------------------------------------
+
+function applyLanguage() {
+  document.documentElement.lang = i18n.lang;
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  // Only our own dictionary text goes through innerHTML (it contains <strong>), never user input.
+  for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = t(el.dataset.i18nHtml);
+  for (const el of document.querySelectorAll('[data-i18n-attr]')) {
+    for (const pair of el.dataset.i18nAttr.split(';')) {
+      const [attr, key] = pair.split(':');
+      el.setAttribute(attr, t(key));
+    }
+  }
+  $('meta-description').setAttribute('content', t('meta.description'));
+  $('cube3d').setAttribute('aria-label', t('cube3d.label'));
+  for (const btn of document.querySelectorAll('.lang-switch .lang')) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.lang === i18n.lang));
+  }
+  resetConfirms();
+  renderPlayButton();
+  renderMessage();
+  render();
+}
+
+for (const btn of document.querySelectorAll('.lang-switch .lang')) {
+  btn.addEventListener('click', () => {
+    if (!LANGS.includes(btn.dataset.lang)) return;
+    i18n.setLang(btn.dataset.lang);
+    try {
+      localStorage.setItem(LANG_KEY, i18n.lang);
+    } catch {
+      // storage unavailable (private mode etc.): the choice just isn't remembered
+    }
+    applyLanguage();
+  });
+}
+
+setMessage('msg.init');
+applyLanguage();
 
 // Let the page paint before the ~0.5 s table build.
 setTimeout(() => {
   solver = createSolver();
   $('solve').disabled = scrambling;
-  if ($('message').textContent === 'Initialisiere Solver…') setMessage('Bereit.');
+  if (message.key === 'msg.init') setMessage('msg.ready');
 }, 0);
