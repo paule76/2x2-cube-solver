@@ -99,3 +99,53 @@ export function toFacelets(state, scheme = DEFAULT_SCHEME) {
 export function isSolved(state) {
   return state.cp.every((c, i) => c === i) && state.co.every((o) => o === 0);
 }
+
+export const COLOR_NAMES = Object.freeze({ W: 'Weiß', Y: 'Gelb', G: 'Grün', B: 'Blau', R: 'Rot', O: 'Orange' });
+const OPPOSITE = { W: 'Y', Y: 'W', G: 'B', B: 'G', R: 'O', O: 'R' };
+
+const fail = (error) => ({ ok: false, error });
+const cornerError = (colors) =>
+  fail(`Die Ecke mit ${colors.map((c) => COLOR_NAMES[c] ?? c).join('/')} gibt es auf einem Würfel nicht.`);
+
+/**
+ * Reads 24 facelet colors (order U R F D L B) into a cube state.
+ * The DBL corner defines which color belongs to which side.
+ * @returns {{ok:true,state,scheme}|{ok:false,error:string}}
+ */
+export function parseFacelets(facelets) {
+  if (facelets.length !== 24 || facelets.some((c) => !c)) {
+    return fail('Es sind noch nicht alle Felder gefärbt.');
+  }
+  for (const color of Object.keys(COLOR_NAMES)) {
+    const n = facelets.filter((c) => c === color).length;
+    if (n !== 4) return fail(`${COLOR_NAMES[color]} kommt ${n}× vor (erwartet: 4×).`);
+  }
+
+  const [d, b, l] = CORNER_FACELETS[6].map((i) => facelets[i]);
+  const scheme = { D: d, B: b, L: l, U: OPPOSITE[d], F: OPPOSITE[b], R: OPPOSITE[l] };
+  if (new Set(Object.values(scheme)).size !== 6) return cornerError([d, b, l]);
+  const sideOf = Object.fromEntries(Object.entries(scheme).map(([side, color]) => [color, side]));
+
+  const cp = [];
+  const co = [];
+  for (let i = 0; i < 8; i++) {
+    const colors = CORNER_FACELETS[i].map((j) => facelets[j]);
+    const sides = colors.map((c) => sideOf[c]);
+    let found = false;
+    for (let c = 0; c < 8 && !found; c++) {
+      for (let o = 0; o < 3 && !found; o++) {
+        if ([0, 1, 2].every((k) => CORNER_COLORS[c][k] === sides[(k + o) % 3])) {
+          cp.push(c);
+          co.push(o);
+          found = true;
+        }
+      }
+    }
+    if (!found) return cornerError(colors);
+  }
+  if (new Set(cp).size !== 8) return fail('Eine Ecke kommt doppelt vor – bitte Eingabe prüfen.');
+  if (co.reduce((a, x) => a + x, 0) % 3 !== 0) {
+    return fail('Eine Ecke ist verdreht – so ist der Würfel nicht lösbar.');
+  }
+  return { ok: true, state: { cp, co }, scheme };
+}
