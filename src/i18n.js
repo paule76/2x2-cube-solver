@@ -94,6 +94,7 @@ export const MESSAGES = {
 
     'footer.source': 'Quellcode auf GitHub',
     'footer.license': 'MIT-Lizenz',
+    'notice.newVersion': 'Neu: Version mit 3x3-Würfel →',
   },
   en: {
     'meta.title': '2x2 Cube Solver',
@@ -185,6 +186,7 @@ export const MESSAGES = {
 
     'footer.source': 'Source on GitHub',
     'footer.license': 'MIT License',
+    'notice.newVersion': 'New: version with the 3x3 cube →',
   },
 };
 

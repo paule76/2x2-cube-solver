@@ -308,3 +308,16 @@ button.small:not(.cell):not(.swatch) { font-size: 0.875rem; padding: 4px 10px; }
 }
 .site-footer a { color: var(--muted); }
 .site-footer a:hover { color: var(--accent); }
+
+/* Hint to the new NxN version */
+.new-version { margin: 4px 0 8px; font-size: 0.9rem; }
+.new-version a {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.new-version a:hover { background: var(--accent); color: var(--accent-text); }
