@@ -142,6 +142,8 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
   counter.hidden = true;
   cam.append(counter);
 
+  let gen = 0; // bumped by render() and each showMove; older animations stop
+
   function showCount(face, n) {
     counter.hidden = !face;
     if (!face) return;
@@ -175,6 +177,8 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
 
   return {
     render(facelets) {
+      gen++; // cancels a running showMove
+      showCount(null);
       resetCubies();
       facelets.forEach((color, i) => {
         stickers[i].dataset.color = color ?? '';
@@ -184,25 +188,29 @@ export function createCube3dView(container, { onStickerClick = () => {} } = {}) 
      * Animates the layer turn; the app renders the resulting state afterwards.
      * Half turns run as two counted quarter turns with a pause in between.
      */
-    async showMove(move, direction) {
+    async showMove(move, direction, { countHalfTurns = true } = {}) {
+      const my = ++gen;
+      const stale = () => gen !== my;
       hint.hidden = true;
       const { axis, degrees } = rotation(move);
       const layer = cubies.filter((c) => inLayer(c.position, move.face));
       const target = degrees * direction;
       setLayer(layer, axis, 0, 0);
       if (reducedMotion()) return;
-      if (move.turns !== 2) {
+      if (move.turns !== 2 || !countHalfTurns) {
         await turnLayer(layer, axis, target, TURN_MS);
         return;
       }
       try {
         showCount(move.face, 1);
         await turnLayer(layer, axis, target / 2, TURN_MS);
+        if (stale()) return;
         await wait(HALF_TURN_PAUSE_MS);
+        if (stale()) return;
         showCount(move.face, 2);
         await turnLayer(layer, axis, target, TURN_MS);
       } finally {
-        showCount(null);
+        if (!stale()) showCount(null);
       }
     },
     showHint(move) {

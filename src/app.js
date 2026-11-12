@@ -26,7 +26,10 @@ function readStoredLang() {
   }
 }
 const i18n = createI18n({
-  lang: detectLang({ stored: readStoredLang(), navigatorLanguages: navigator.languages ?? [navigator.language] }),
+  lang: detectLang({
+    stored: readStoredLang(),
+    navigatorLanguages: navigator.languages?.length ? navigator.languages : [navigator.language],
+  }),
 });
 const t = i18n.t;
 const colorName = (c) => t(c ? `color.${c}` : 'color.empty');
@@ -51,7 +54,7 @@ const views = [net, cube3d];
 // Fans the view interface out to all views; showMove waits for every view.
 const view = {
   render: (facelets) => views.forEach((v) => v.render(facelets)),
-  showMove: (move, direction) => Promise.all(views.map((v) => v.showMove(move, direction))),
+  showMove: (move, direction, options) => Promise.all(views.map((v) => v.showMove(move, direction, options))),
   showHint: (move) => views.forEach((v) => v.showHint?.(move)),
 };
 
@@ -269,7 +272,7 @@ async function scramble() {
     input = toFacelets(state);
     render();
     for (const m of moves) {
-      await view.showMove(m, 1);
+      await view.showMove(m, 1, { countHalfTurns: false }); // counting only helps when solving
       state = applyMove(state, m);
       input = toFacelets(state);
       render();
@@ -358,7 +361,10 @@ function applyLanguage() {
   resetConfirms();
   renderPlayButton();
   renderMessage();
-  render();
+  // Texts only: a full render() would cancel a running 3D animation.
+  net.render(displayed());
+  renderPalette();
+  renderSolution();
 }
 
 for (const btn of document.querySelectorAll('.lang-switch .lang')) {
@@ -376,6 +382,7 @@ for (const btn of document.querySelectorAll('.lang-switch .lang')) {
 
 setMessage('msg.init');
 applyLanguage();
+render();
 
 // Let the page paint before the ~0.5 s table build.
 setTimeout(() => {
