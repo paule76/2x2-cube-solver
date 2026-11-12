@@ -100,37 +100,28 @@ export function isSolved(state) {
   return state.cp.every((c, i) => c === i) && state.co.every((o) => o === 0);
 }
 
-export const COLOR_NAMES = Object.freeze({ W: 'Weiß', Y: 'Gelb', G: 'Grün', B: 'Blau', R: 'Rot', O: 'Orange' });
+const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
 const OPPOSITE = { W: 'Y', Y: 'W', G: 'B', B: 'G', R: 'O', O: 'R' };
+export const CORNER_NAMES = Object.freeze(['URF', 'UFL', 'ULB', 'UBR', 'DFR', 'DLF', 'DBL', 'DRB']);
 
-const fail = (error) => ({ ok: false, error });
-const POSITION_NAMES = [
-  'oben-vorne-rechts', 'oben-vorne-links', 'oben-hinten-links', 'oben-hinten-rechts',
-  'unten-vorne-rechts', 'unten-vorne-links', 'unten-hinten-links', 'unten-hinten-rechts',
-];
-const cornerLabel = (pos, colors) =>
-  `Ecke ${POSITION_NAMES[pos]} (${colors.map((c) => COLOR_NAMES[c] ?? c).join('/')})`;
+const fail = (code, params = {}) => ({ ok: false, code, params });
 const cornerError = (pos, colors, sides) => {
-  const sameSet = CORNER_COLORS.some((cc) => sides.every((s) => cc.includes(s)) && new Set(sides).size === 3);
-  return fail(
-    sameSet
-      ? `${cornerLabel(pos, colors)}: Farben in falscher Reihenfolge – evtl. eine Seite gespiegelt eingegeben (B von hinten, D von unten gesehen).`
-      : `${cornerLabel(pos, colors)} gibt es auf einem Würfel nicht.`,
-  );
+  const sameSet = new Set(sides).size === 3 && CORNER_COLORS.some((cc) => sides.every((s) => cc.includes(s)));
+  return fail(sameSet ? 'cornerOrder' : 'cornerImpossible', { position: CORNER_NAMES[pos], colors });
 };
 
 /**
  * Reads 24 facelet colors (order U R F D L B) into a cube state.
  * The DBL corner defines which color belongs to which side.
- * @returns {{ok:true,state,scheme}|{ok:false,error:string}}
+ * @returns {{ok:true,state,scheme}|{ok:false,code:string,params:object}} (format with messages.js)
  */
 export function parseFacelets(facelets) {
   if (facelets.length !== 24 || facelets.some((c) => !c)) {
-    return fail('Es sind noch nicht alle Felder gefärbt.');
+    return fail('incomplete');
   }
-  for (const color of Object.keys(COLOR_NAMES)) {
+  for (const color of COLORS) {
     const n = facelets.filter((c) => c === color).length;
-    if (n !== 4) return fail(`${COLOR_NAMES[color]} kommt ${n}× vor (erwartet: 4×).`);
+    if (n !== 4) return fail('colorCount', { color, count: n });
   }
 
   const [d, b, l] = CORNER_FACELETS[6].map((i) => facelets[i]);
@@ -155,9 +146,9 @@ export function parseFacelets(facelets) {
     }
     if (!found) return cornerError(i, colors, sides);
   }
-  if (new Set(cp).size !== 8) return fail('Eine Ecke kommt doppelt vor – bitte Eingabe prüfen.');
+  if (new Set(cp).size !== 8) return fail('duplicateCorner');
   if (co.reduce((a, x) => a + x, 0) % 3 !== 0) {
-    return fail('Eine Ecke ist verdreht – so ist der Würfel nicht lösbar.');
+    return fail('twistedCorner');
   }
   return { ok: true, state: { cp, co }, scheme };
 }
