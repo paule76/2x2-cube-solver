@@ -1,6 +1,7 @@
 import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMoves, moveToString } from './cube.js';
 import { createSolver } from './solver.js';
 import { createNetView } from './views/net-view.js';
+import { createCube3dView } from './views/cube3d-view.js';
 import { createStepper } from './stepper.js';
 import { stepText, describeMove } from './step-text.js';
 
@@ -14,10 +15,22 @@ let input = toFacelets(SOLVED);
 /** @type {null | { state, scheme, moves: object[], step: number }} */
 let solution = null;
 
-const view = createNetView($('net'), {
+const net = createNetView($('net'), {
   onCellClick,
+  onCellHover: (index) => cube3d.highlight(index),
   colorName: (c) => (c ? COLOR_NAMES[c] : 'leer'),
 });
+const cube3d = createCube3dView($('cube3d'), {
+  onStickerClick: (index) => net.highlight(index),
+});
+const views = [net, cube3d];
+
+// Fans the view interface out to all views; showMove waits for every view.
+const view = {
+  render: (facelets) => views.forEach((v) => v.render(facelets)),
+  showMove: (move, direction) => Promise.all(views.map((v) => v.showMove(move, direction))),
+  showHint: (move) => views.forEach((v) => v.showHint?.(move)),
+};
 
 function displayed() {
   if (!solution) return input;
@@ -142,6 +155,7 @@ function buildPalette() {
 
 buildPalette();
 $('solve').addEventListener('click', solve);
+$('reset-camera').addEventListener('click', () => cube3d.resetCamera());
 $('reset').addEventListener('click', () => {
   input = toFacelets(SOLVED);
   clearSolution();

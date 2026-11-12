@@ -9,6 +9,8 @@
   --error: #b3261e;
   --success: #1b7a3a;
   --cell-empty: #ececea;
+  --plastic: #1b1b1d;
+  --highlight: #ff2bd6;
 
   --c-W: #ffffff;
   --c-Y: #ffd500;
@@ -58,7 +60,7 @@ body {
 }
 
 main {
-  max-width: 760px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 24px 16px 48px;
 }
@@ -162,3 +164,65 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 420px) {
   .actions button { flex: 1 1 auto; }
 }
+
+/* Layout: net and 3D view */
+.views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  align-items: center;
+  justify-content: center;
+}
+.view-net { flex: 1 1 360px; min-width: 0; }
+.view-3d {
+  flex: 0 1 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+button.small:not(.cell):not(.swatch) { font-size: 0.875rem; padding: 4px 10px; }
+
+/* Highlight (sync between net and 3D) */
+.cell.highlighted { outline: 3px solid var(--highlight); outline-offset: 2px; animation: blink 0.6s ease-in-out 2; }
+@keyframes blink { 50% { outline-color: transparent; } }
+
+/* 3D cube */
+.cube3d {
+  --s: clamp(52px, 16vw, 72px);  /* cubie edge */
+  --h: calc(var(--s) / 2);
+  width: calc(var(--s) * 4);
+  height: calc(var(--s) * 4);
+  perspective: calc(var(--s) * 14);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.cube3d.dragging { cursor: grabbing; }
+.cube3d .scene { position: relative; width: 100%; height: 100%; }
+.cube3d .camera {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.cube3d .cubie {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: var(--s); height: var(--s);
+  margin: calc(var(--h) * -1) 0 0 calc(var(--h) * -1);
+  transform-style: preserve-3d;
+}
+.cube3d .cubie-face {
+  position: absolute;
+  inset: 0;
+  background: var(--plastic);
+  backface-visibility: hidden;
+}
+.cube3d .sticker {
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cube3d .sticker[data-color=""] { background: var(--cell-empty); }
+.cube3d .sticker.highlighted { box-shadow: 0 0 0 3px var(--highlight) inset; }

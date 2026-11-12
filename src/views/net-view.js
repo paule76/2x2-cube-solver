@@ -1,5 +1,5 @@
 // Net view: the cube unfolded as a cross. Implements the view interface
-// { render(facelets), showMove(move, direction) } so a 3D view can replace it later.
+// { render(facelets), showMove(move, direction), highlight(index|null) }.
 
 // Face letter -> first facelet index, and grid placement (column, row) in the cross.
 const FACES = [
@@ -15,9 +15,10 @@ const FACE_NAMES = { U: 'Oben', L: 'Links', F: 'Vorne', R: 'Rechts', B: 'Hinten'
 
 /**
  * @param {HTMLElement} container
- * @param {{ onCellClick(index: number): void, colorName?(color: string|null): string }} options
+ * @param {{ onCellClick(index: number): void, onCellHover?(index: number|null): void,
+ *           colorName?(color: string|null): string }} options
  */
-export function createNetView(container, { onCellClick, colorName = (c) => c ?? 'leer' }) {
+export function createNetView(container, { onCellClick, onCellHover = () => {}, colorName = (c) => c ?? 'leer' }) {
   const cells = new Array(24);
   container.classList.add('net');
   container.replaceChildren();
@@ -39,6 +40,10 @@ export function createNetView(container, { onCellClick, colorName = (c) => c ?? 
       cell.className = 'cell';
       cell.dataset.index = String(index);
       cell.addEventListener('click', () => onCellClick(index));
+      cell.addEventListener('mouseenter', () => onCellHover(index));
+      cell.addEventListener('focus', () => onCellHover(index));
+      cell.addEventListener('mouseleave', () => onCellHover(null));
+      cell.addEventListener('blur', () => onCellHover(null));
       cells[index] = cell;
       el.append(cell);
     }
@@ -54,9 +59,19 @@ export function createNetView(container, { onCellClick, colorName = (c) => c ?? 
         cell.setAttribute('aria-label', `${FACE_NAMES[face.face]}, Feld ${i - face.start + 1}: ${colorName(color)}`);
       });
     },
-    // The flat net has no animation; a 3D view would animate here.
+    // The flat net has no animation.
     showMove() {
       return Promise.resolve();
+    },
+    highlight(index) {
+      cells.forEach((cell, i) => {
+        const on = i === index;
+        cell.classList.remove('highlighted');
+        if (on) {
+          void cell.offsetWidth; // restart the blink animation
+          cell.classList.add('highlighted');
+        }
+      });
     },
   };
 }

@@ -18,8 +18,16 @@
     <section class="panel" aria-labelledby="input-title">
       <h2 id="input-title">Würfel eingeben</h2>
       <div class="palette" id="palette" role="radiogroup" aria-label="Farbe wählen"></div>
-      <div class="net" id="net"></div>
-      <p class="hint net-hint">So liest du das Netz: Die Mitte ist <strong>vorne (F)</strong>. Seite <strong>B</strong> so eintragen, wie du sie von hinten siehst (ihre linke Spalte grenzt an R). Seite <strong>D</strong> so, wie du sie von unten siehst, mit der Vorderkante oben.</p>
+      <div class="views">
+        <div class="view-net">
+          <div class="net" id="net"></div>
+          <p class="hint net-hint">So liest du das Netz: Die Mitte ist <strong>vorne (F)</strong>. Seite <strong>B</strong> so eintragen, wie du sie von hinten siehst (ihre linke Spalte grenzt an R). Seite <strong>D</strong> so, wie du sie von unten siehst, mit der Vorderkante oben.</p>
+        </div>
+        <div class="view-3d">
+          <div id="cube3d"></div>
+          <button type="button" id="reset-camera" class="small">Ansicht zurücksetzen</button>
+        </div>
+      </div>
       <div class="actions">
         <button type="button" id="solve" class="primary" disabled>Lösen</button>
         <button type="button" id="reset">Gelöst zurücksetzen</button>
