@@ -2,13 +2,11 @@ import { SOLVED, COLOR_NAMES, toFacelets, parseFacelets, applyMoves, moveToStrin
 import { createSolver } from './solver.js';
 import { createNetView } from './views/net-view.js';
 import { createStepper } from './stepper.js';
+import { stepText, describeMove } from './step-text.js';
 
 const COLORS = ['W', 'Y', 'G', 'B', 'R', 'O'];
-const FACE_TEXT = { U: 'obere Seite', R: 'rechte Seite', F: 'vordere Seite' };
-const TURN_TEXT = { 1: 'im Uhrzeigersinn', [-1]: 'gegen den Uhrzeigersinn', 2: 'halbe Drehung (180°)' };
 
 const $ = (id) => document.getElementById(id);
-const describe = (m) => `${moveToString(m)} – ${FACE_TEXT[m.face]} ${TURN_TEXT[m.turns]}`;
 
 let solver = null;
 let selected = 'W';
@@ -92,16 +90,12 @@ function renderSolution() {
       const li = document.createElement('li');
       li.textContent = moveToString(m);
       if (i < step) li.className = 'done';
-      if (i === step - 1) li.classList.add('current');
-      li.title = describe(m);
+      if (i === step) li.className = 'current';
+      li.title = describeMove(m);
       return li;
     }),
   );
-  let text;
-  if (step === 0) text = `Ausgangslage. Nächster Zug: ${describe(moves[0])}`;
-  else text = `Schritt ${step} von ${moves.length}: ${describe(moves[step - 1])}`;
-  if (step === moves.length) text += ' – geschafft, der Würfel ist gelöst! 🎉';
-  $('step-text').textContent = text;
+  $('step-text').textContent = stepText(moves, step);
   $('first').disabled = $('prev').disabled = step === 0;
   $('next').disabled = $('last').disabled = step === moves.length;
 }
